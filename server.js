@@ -31,7 +31,7 @@ function wrap(raw, base) {
   try {
     const abs = resolveHref(base, raw);
     if (!abs.startsWith('http')) return raw;
-    return `/proxy?url=${encodeURIComponent(abs)}`;
+    return '/proxy?url=' + encodeURIComponent(abs);
   } catch { return raw; }
 }
 
