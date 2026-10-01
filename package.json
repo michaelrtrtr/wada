@@ -1,0 +1,15 @@
+{
+  "name": "portal",
+  "version": "2.0.0",
+  "description": "local reverse-proxy mirror v2",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "axios": "^1.7.0",
+    "cheerio": "^1.0.0",
+    "express": "^4.19.0",
+    "ws": "^8.17.0"
+  }
+}

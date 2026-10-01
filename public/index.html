@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>portal</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      min-height: 100vh;
+      background: #0c0c0c;
+      color: #e0e0e0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Courier New', Courier, monospace;
+      gap: 18px;
+      padding: 2rem;
+    }
+    .logo  { font-size: 2.8rem; color: #2563eb; line-height: 1; user-select: none; }
+    h1     { font-size: 1rem; font-weight: 400; color: #fff; letter-spacing: .18em; }
+    .sub   { color: #2e2e2e; font-size: .7rem; letter-spacing: .06em; }
+
+    .bar {
+      display: flex;
+      width: 100%;
+      max-width: 620px;
+      gap: 8px;
+      margin-top: 6px;
+    }
+    input {
+      flex: 1;
+      background: #111;
+      border: 1px solid #222;
+      border-radius: 6px;
+      color: #ccc;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 14px;
+      padding: 11px 16px;
+      outline: none;
+      transition: border-color .15s;
+    }
+    input:focus        { border-color: #2563eb; }
+    input::placeholder { color: #2e2e2e; }
+
+    button {
+      background: #2563eb;
+      border: none;
+      border-radius: 6px;
+      color: #fff;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 14px;
+      padding: 11px 22px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background .12s;
+    }
+    button:hover { background: #1d4ed8; }
+
+    .hint { color: #222; font-size: .65rem; letter-spacing: .04em; }
+
+    .section-label {
+      color: #252525;
+      font-size: .62rem;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      width: 100%;
+      max-width: 620px;
+      margin-top: 8px;
+    }
+    .recents {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      width: 100%;
+      max-width: 620px;
+    }
+    .r {
+      background: #0f0f0f;
+      border: 1px solid #1a1a1a;
+      border-radius: 5px;
+      color: #444;
+      font-size: 12px;
+      padding: 7px 13px;
+      cursor: pointer;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      transition: border-color .1s, color .1s;
+    }
+    .r:hover { border-color: #2563eb; color: #999; }
+
+    .badges {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: center;
+      max-width: 620px;
+      margin-top: 4px;
+    }
+    .badge {
+      background: #111;
+      border: 1px solid #1e1e1e;
+      border-radius: 20px;
+      color: #333;
+      font-size: .65rem;
+      padding: 3px 10px;
+      letter-spacing: .04em;
+      cursor: pointer;
+      transition: border-color .1s, color .1s;
+    }
+    .badge:hover { border-color: #333; color: #777; }
+  </style>
+</head>
+<body>
+  <div class="logo">⬡</div>
+  <h1>portal v2</h1>
+  <p class="sub">paste a url. browse clean.</p>
+
+  <div class="bar">
+    <input id="url" type="text" placeholder="https://example.com" autofocus
+      onkeydown="if(event.key==='Enter') go()"/>
+    <button onclick="go()">go →</button>
+  </div>
+  <p class="hint">supports WebSocket relay · cookie sessions · fetch/XHR proxy</p>
+
+  <div class="badges" id="quick">
+    <div class="badge" onclick="nav('https://discord.com')">discord.com</div>
+    <div class="badge" onclick="nav('https://roblox.com')">roblox.com</div>
+    <div class="badge" onclick="nav('https://crazygames.com')">crazygames.com</div>
+    <div class="badge" onclick="nav('https://wikipedia.org')">wikipedia</div>
+    <div class="badge" onclick="nav('https://reddit.com')">reddit</div>
+  </div>
+
+  <div id="rec_wrap" style="display:none;width:100%;max-width:620px;display:flex;flex-direction:column;gap:5px;">
+    <p class="section-label" style="margin-top:8px;">recent</p>
+    <div class="recents" id="rec"></div>
+  </div>
+
+  <script>
+    var KEY = 'portal_hist';
+
+    function load()  { try { return JSON.parse(localStorage.getItem(KEY) || '[]'); } catch { return []; } }
+    function save(h) { try { localStorage.setItem(KEY, JSON.stringify(h)); }        catch {} }
+
+    function push(u) {
+      var h = load().filter(function(x){ return x !== u; });
+      h.unshift(u);
+      save(h.slice(0, 8));
+    }
+
+    function nav(u) {
+      if (!u) return;
+      var full = u.startsWith('http') ? u : 'https://' + u;
+      push(full);
+      window.location.href = '/proxy?url=' + encodeURIComponent(full);
+    }
+
+    function go() { nav(document.getElementById('url').value.trim()); }
+
+    (function renderRecent() {
+      var h = load();
+      if (!h.length) return;
+      var wrap = document.getElementById('rec_wrap');
+      var list = document.getElementById('rec');
+      wrap.style.display = 'flex';
+      h.forEach(function(u) {
+        var el = document.createElement('div');
+        el.className   = 'r';
+        el.textContent = u;
+        el.onclick     = function() { nav(u); };
+        list.appendChild(el);
+      });
+    })();
+  </script>
+</body>
+</html>
