@@ -1,14 +1,13 @@
-```js
-const express             = require('express');
-const axios               = require('axios');
-const cheerio             = require('cheerio');
-const { URL }             = require('url');
-const http                = require('http');
+const express = require('express');
+const axios = require('axios');
+const cheerio = require('cheerio');
+const { URL } = require('url');
+const http = require('http');
 const { WebSocketServer, WebSocket: WS } = require('ws');
 
-const app    = express();
+const app = express();
 const server = http.createServer(app);
-const PORT   = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3000;
 
 // Body parsing — needed so POST login forms actually forward their data
 app.use(express.json({ limit: '10mb' }));
@@ -28,11 +27,14 @@ function wrap(raw, base) {
   if (!raw || typeof raw !== 'string') return raw;
   const skip = ['#', 'javascript:', 'mailto:', 'tel:', 'data:', '/proxy?url=', 'blob:'];
   if (skip.some(p => raw.startsWith(p))) return raw;
+
   try {
     const abs = resolveHref(base, raw);
     if (!abs.startsWith('http')) return raw;
     return '/proxy?url=' + encodeURIComponent(abs);
-  } catch { return raw; }
+  } catch {
+    return raw;
+  }
 }
 
 function getOrigin(urlStr) {
@@ -42,10 +44,12 @@ function getOrigin(urlStr) {
 // Decode the real upstream URL from a proxied Referer header
 function unwrapReferer(refererHeader) {
   try {
-    const u   = new URL(refererHeader);
+    const u = new URL(refererHeader);
     const raw = u.searchParams.get('url');
     return raw || refererHeader;
-  } catch { return refererHeader; }
+  } catch {
+    return refererHeader;
+  }
 }
 
 // ── WebSocket relay ───────────────────────────────────────────────────────────
@@ -53,7 +57,7 @@ function unwrapReferer(refererHeader) {
 const wss = new WebSocketServer({ server, path: '/ws-relay' });
 
 wss.on('connection', (clientWs, req) => {
-  const qs     = req.url.includes('?') ? req.url.split('?')[1] : '';
+  const qs = req.url.includes('?') ? req.url.split('?')[1] : '';
   const params = new URLSearchParams(qs);
   const target = params.get('url');
   const origin = params.get('origin') || '';
@@ -64,11 +68,12 @@ wss.on('connection', (clientWs, req) => {
   }
 
   let targetWs;
+
   try {
     targetWs = new WS(target, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-        'Origin'    : origin,
+        'Origin': origin,
       },
     });
   } catch {
@@ -822,13 +827,3 @@ server.listen(PORT, () => {
   • Render WebSocket support (ws:// locally, wss:// on HTTPS)
   `);
 });
-```
-
-**The important change** is:
-
-```js
-var WS_PROTO = location.protocol === 'https:' ? 'wss:' : 'ws:';
-var WS_RELAY = WS_PROTO + '//' + location.host + '/ws-relay';
-```
-
-Everything else is your existing server with that Render fix applied.
