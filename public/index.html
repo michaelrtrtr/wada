@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>portal</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      min-height: 100vh;
+      background: #0c0c0c;
+      color: #e0e0e0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Courier New', Courier, monospace;
+      gap: 18px;
+      padding: 2rem;
+    }
+    .logo  { font-size: 2.8rem; color: #2563eb; line-height: 1; user-select: none; }
+    h1     { font-size: 1rem; font-weight: 400; color: #fff; letter-spacing: .18em; }
+    .sub   { color: #2a2a2a; font-size: .7rem; letter-spacing: .06em; }
+    .bar {
+      display: flex;
+      width: 100%;
+      max-width: 640px;
+      gap: 8px;
+      margin-top: 6px;
+    }
+    input {
+      flex: 1;
+      background: #111;
+      border: 1px solid #222;
+      border-radius: 6px;
+      color: #ccc;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 14px;
+      padding: 11px 16px;
+      outline: none;
+      transition: border-color .15s;
+    }
+    input:focus        { border-color: #2563eb; }
+    input::placeholder { color: #2e2e2e; }
+    button.go {
+      background: #2563eb;
+      border: none;
+      border-radius: 6px;
+      color: #fff;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 14px;
+      padding: 11px 22px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background .12s;
+    }
+    button.go:hover { background: #1d4ed8; }
+    .hint { color: #1e1e1e; font-size: .65rem; letter-spacing: .04em; }
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      max-width: 640px;
+      justify-content: center;
+      margin-top: 4px;
+    }
+    .chip {
+      background: #111;
+      border: 1px solid #1a1a1a;
+      border-radius: 20px;
+      color: #333;
+      font-size: .65rem;
+      padding: 4px 12px;
+      cursor: pointer;
+      transition: border-color .1s, color .1s;
+    }
+    .chip:hover { border-color: #2563eb; color: #888; }
+    .rec-label {
+      color: #1e1e1e;
+      font-size: .6rem;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      width: 100%;
+      max-width: 640px;
+      margin-top: 10px;
+    }
+    .recents {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      width: 100%;
+      max-width: 640px;
+    }
+    .r {
+      background: #0f0f0f;
+      border: 1px solid #181818;
+      border-radius: 5px;
+      color: #383838;
+      font-size: 12px;
+      padding: 7px 13px;
+      cursor: pointer;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      transition: border-color .1s, color .1s;
+    }
+    .r:hover { border-color: #2563eb; color: #999; }
+  </style>
+</head>
+<body>
+  <div class="logo">⬡</div>
+  <h1>portal</h1>
+  <p class="sub">paste a url · browse clean</p>
+
+  <div class="bar">
+    <input id="url" type="text" placeholder="https://example.com"
+      autofocus onkeydown="if(event.key==='Enter') go()"/>
+    <button class="go" onclick="go()">go →</button>
+  </div>
+
+  <p class="hint">runs locally · nothing leaves your machine</p>
+
+  <div class="chips">
+    <div class="chip" onclick="nav('https://discord.com/app')">discord</div>
+    <div class="chip" onclick="nav('https://www.roblox.com')">roblox</div>
+    <div class="chip" onclick="nav('https://www.crazygames.com')">crazygames</div>
+    <div class="chip" onclick="nav('https://www.reddit.com')">reddit</div>
+    <div class="chip" onclick="nav('https://www.youtube.com')">youtube</div>
+    <div class="chip" onclick="nav('https://en.wikipedia.org')">wikipedia</div>
+    <div class="chip" onclick="nav('https://www.twitch.tv')">twitch</div>
+    <div class="chip" onclick="nav('https://www.spotify.com')">spotify</div>
+  </div>
+
+  <div id="rec_wrap" style="display:none;" class="recents">
+    <p class="rec-label">recent</p>
+    <div id="rec"></div>
+  </div>
+
+  <script>
+    var KEY = 'portal_hist';
+    function load()   { try { return JSON.parse(localStorage.getItem(KEY) || '[]'); } catch { return []; } }
+    function save(h)  { try { localStorage.setItem(KEY, JSON.stringify(h)); } catch {} }
+    function nav(u) {
+      if (!u) return;
+      var full = u.startsWith('http') ? u : 'https://' + u;
+      var h = load().filter(function(x){ return x !== full; });
+      h.unshift(full);
+      save(h.slice(0, 8));
+      window.location.href = '/proxy?url=' + encodeURIComponent(full);
+    }
+    function go() { nav(document.getElementById('url').value.trim()); }
+
+    (function () {
+      var h = load();
+      if (!h.length) return;
+      var wrap = document.getElementById('rec_wrap');
+      var list = document.getElementById('rec');
+      wrap.style.display = 'flex';
+      wrap.style.flexDirection = 'column';
+      wrap.style.gap = '5px';
+      wrap.style.width = '100%';
+      wrap.style.maxWidth = '640px';
+      h.forEach(function(u) {
+        var el = document.createElement('div');
+        el.className   = 'r';
+        el.textContent = u;
+        el.onclick     = function() { nav(u); };
+        list.appendChild(el);
+      });
+    })();
+  </script>
+</body>
+</html>
